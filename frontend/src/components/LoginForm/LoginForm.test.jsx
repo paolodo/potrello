@@ -1,7 +1,8 @@
 // @ts-check
-import { render, screen, expect, describe, it, vi, userEvent, waitFor } from '../../test-utils'
+import { render, screen, userEvent, waitFor } from '../../test-utils'
 import LoginForm from './LoginForm'
 import axios from 'redaxios'
+import { vi, expect, describe, it, afterEach } from 'vitest'
 
 vi.mock('redaxios')
 
@@ -31,15 +32,17 @@ describe('LoginForm', () => {
 
 		const { user } = setup()
 
-		user.type(
+		await user.type(
 			screen.getByRole('textbox', {
 				name: 'Email'
 			}),
 			'test@test.test'
 		)
 
-		user.type(screen.getByLabelText('Password'), 'test{enter}')
+		await user.type(screen.getByLabelText('Password'), 'test{enter}')
 
-		await waitFor(() => expect(props.onLogin).toHaveBeenCalledWith('success'))
+		await waitFor(() => expect(props.onLogin).toHaveBeenCalled())
+
+		expect(props.onLogin).toHaveBeenCalledWith('success')
 	})
 })
