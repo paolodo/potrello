@@ -2,7 +2,7 @@
 import React, { useState, useId } from 'react'
 import axios from 'redaxios'
 
-import './LoginForm.css'
+import './AuthForm.css'
 
 /**
  *
@@ -25,10 +25,30 @@ async function doLogin(email, password) {
 
 /**
  *
- * @param {{ onLogin: (token: string) => void }} props
+ * @param {string} email
+ * @param {string} password
+ * @returns Promise<{ token: string }>
+ */
+async function doSignup(email, password) {
+	const res = await axios({
+		method: 'POST',
+		url: '/api/signup/',
+		data: {
+			email,
+			password,
+			username: email
+		}
+	})
+
+	return res.data
+}
+
+/**
+ *
+ * @param {{ onSuccess: (token: string) => void, mode: 'login' | 'signup' }} props
  * @returns
  */
-const LoginForm = (props) => {
+const AuthForm = (props) => {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
@@ -40,10 +60,12 @@ const LoginForm = (props) => {
 	const handleSubmit = async (event) => {
 		event.preventDefault()
 
-		try {
-			const { token } = await doLogin(email, password)
+		const doAuth = props.mode === 'login' ? doLogin : doSignup
 
-			props.onLogin(token)
+		try {
+			const { token } = await doAuth(email, password)
+
+			props.onSuccess(token)
 		} catch (err) {
 			if (err.status === 401) {
 				setError('Uh, we have not found users with these credentials')
@@ -59,7 +81,7 @@ const LoginForm = (props) => {
 	const passwordId = `password-${useId()}`
 
 	return (
-		<form className="LoginForm" onSubmit={handleSubmit}>
+		<form className="AuthForm" onSubmit={handleSubmit}>
 			<label htmlFor={emailId}>Email</label>
 			<input
 				id={emailId}
@@ -76,9 +98,9 @@ const LoginForm = (props) => {
 				onChange={(e) => setPassword(e.target.value)}
 				required
 			/>
-			<button type="submit">Login</button>
+			<button type="submit">{props.mode === 'login' ? 'Login' : 'Signup'}</button>
 			{error && (
-				<div role="status" aria-live="polite" className="LoginForm__Error">
+				<div role="status" aria-live="polite" className="AuthForm__Error">
 					{error}
 				</div>
 			)}
@@ -86,4 +108,4 @@ const LoginForm = (props) => {
 	)
 }
 
-export default LoginForm
+export default AuthForm

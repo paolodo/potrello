@@ -1,4 +1,4 @@
-.LoginForm {
+.AuthForm {
 	display: flex;
 	flex-direction: column;
 	margin: 1rem auto;
@@ -8,7 +8,7 @@
 	border: 1px solid black;
 }
 
-.LoginForm__Error {
+.AuthForm__Error {
 	border: 1px solid red;
 	padding: 1rem;
 }
