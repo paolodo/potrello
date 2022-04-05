@@ -31,6 +31,7 @@ async function doLogin(email, password) {
 const LoginForm = (props) => {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
+	const [error, setError] = useState('')
 
 	/**
 	 *
@@ -39,9 +40,19 @@ const LoginForm = (props) => {
 	const handleSubmit = async (event) => {
 		event.preventDefault()
 
-		const { token } = await doLogin(email, password)
+		try {
+			const { token } = await doLogin(email, password)
 
-		props.onLogin(token)
+			props.onLogin(token)
+		} catch (err) {
+			if (err.status === 401) {
+				setError('Uh, we have not found users with these credentials')
+			} else if (err.status) {
+				setError('Uh, there are some problems with the services')
+			} else {
+				setError('Uh, this error happened: ' + err.message)
+			}
+		}
 	}
 
 	const emailId = `email-${useId()}`
@@ -66,6 +77,11 @@ const LoginForm = (props) => {
 				required
 			/>
 			<button type="submit">Login</button>
+			{error && (
+				<div role="status" aria-live="polite" className="LoginForm__Error">
+					{error}
+				</div>
+			)}
 		</form>
 	)
 }
