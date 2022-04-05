@@ -7,3 +7,8 @@
 	padding: 1rem;
 	border: 1px solid black;
 }
+
+.LoginForm__Error {
+	border: 1px solid red;
+	padding: 1rem;
+}

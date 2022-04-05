@@ -1,5 +1,5 @@
 // @ts-check
-import { render, screen, userEvent, waitFor } from '../../test-utils'
+import { act, render, screen, userEvent, waitFor, cleanup } from '../../test-utils'
 import LoginForm from './LoginForm'
 import axios from 'redaxios'
 import { vi, expect, describe, it, afterEach } from 'vitest'
@@ -20,6 +20,7 @@ describe('LoginForm', () => {
 
 	afterEach(() => {
 		vi.clearAllMocks()
+		cleanup()
 	})
 
 	it('submits the form', async () => {
@@ -44,5 +45,29 @@ describe('LoginForm', () => {
 		await waitFor(() => expect(props.onLogin).toHaveBeenCalled())
 
 		expect(props.onLogin).toHaveBeenCalledWith('success')
+	})
+
+	it('handles the API errors', async () => {
+		vi.mocked(axios).mockImplementationOnce(() => {
+			/** @type {*} */
+			const response = Promise.reject({ status: 401 })
+
+			return response
+		})
+
+		const { user } = setup()
+
+		await user.type(
+			screen.getByRole('textbox', {
+				name: 'Email'
+			}),
+			'test@test.test'
+		)
+
+		await user.type(screen.getByLabelText('Password'), 'test')
+
+		await act(() => user.click(screen.getByRole('button')))
+
+		expect(await screen.findByRole('status')).toHaveClass('LoginForm__Error')
 	})
 })
