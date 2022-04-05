@@ -1,23 +1,21 @@
 import { useState } from 'react'
 import AuthForm from './components/AuthForm'
+import useAuth from './components/hooks/useAuth'
 
 function App() {
-	const [token, setToken] = useState('')
+	const auth = useAuth()
 	const [boardName, setBoardName] = useState('')
 	const [boardList, setBoardList] = useState([])
-	const [user, setUser] = useState({})
 	const [login, setLogin] = useState(true)
 
 	async function deleteBoard(id) {
 		try {
-			let res = await fetch('/api/boards/' + id, {
+			const res = await fetch('/api/boards/' + id, {
 				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }
+				headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }
 			})
-
-			let resJson = await res.json()
 			if (res.status === 200) {
-				getUser(token)
+				updateBoards()
 			} else {
 				console.log('Some error occured')
 			}
@@ -26,17 +24,16 @@ function App() {
 		}
 	}
 
-	async function getUser(tok) {
+	async function updateBoards() {
 		try {
 			let res = await fetch('/api/users/', {
 				method: 'GET',
-				headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok }
+				headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token }
 			})
 
 			let resJson = await res.json()
 			if (res.status === 200) {
 				setBoardList(resJson.result.boardList)
-				setUser(resJson.result.result)
 			} else {
 				console.log('Some error occured')
 			}
@@ -46,22 +43,19 @@ function App() {
 	}
 
 	async function createBoard() {
-		let bearer = 'Bearer ' + token
-		console.log(bearer)
 		try {
 			let res = await fetch('/api/boards/', {
 				method: 'POST',
 
-				headers: { 'Content-Type': 'application/json', Authorization: bearer },
+				headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + auth.token },
 
 				body: JSON.stringify({
 					name: boardName
 				})
 			})
-			let resJson = await res.json()
 			if (res.status === 200) {
 				setBoardName('')
-				getUser(token)
+				updateBoards()
 			} else {
 				console.log('Some error occured')
 			}
@@ -69,24 +63,23 @@ function App() {
 			console.log(err)
 		}
 	}
-	function handleAuth(token) {
-		setToken(token)
-		getUser(token)
-	}
 
-	if (!token) {
+	if (!auth.token) {
 		return (
 			<>
 				<button onClick={() => setLogin(false)}>Go to {login ? 'signup' : 'login'} form</button>
-				<AuthForm onSuccess={handleAuth} mode={login ? 'login' : 'signup'} />
+				<AuthForm onSuccess={auth.updateToken} mode={login ? 'login' : 'signup'} />
 			</>
 		)
 	}
 
+	// Loading
+	if (!auth.user) return null
+
 	return (
 		<div>
 			<div>
-				<h1>Welcome, {user.username}</h1>
+				<h1>Welcome, {auth.user.username}</h1>
 				<form
 					className="addBoard"
 					onSubmit={(event) => {
